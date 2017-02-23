@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
     forwarder.py
-    ~~~~~~~~~~
+    ~~~~~~~~~~~~
 
     HTTP Forwarder (Gateway) in Python
 
@@ -76,6 +76,15 @@ CHUNK_PARSER_STATE_WAITING_FOR_SIZE = 1
 CHUNK_PARSER_STATE_WAITING_FOR_DATA = 2
 CHUNK_PARSER_STATE_COMPLETE = 3
 
+## ##################################################
+## Forwarder - hard coded config
+##  (egg)
+
+HTTP_FWD_SERVER = "localhost"
+HTTP_FWD_PORT   = 8000
+
+##
+## ##################################################
 
 class ChunkParser(object):
     """HTTP chunked encoding response parser."""
@@ -137,7 +146,7 @@ class HttpParser(object):
         self.buffer = b''
 
         more = True if len(data) > 0 else False
-        while more: 
+        while more:
             more, data = self.process(data)
         self.buffer = data
 
@@ -366,10 +375,15 @@ class Proxy(multiprocessing.Process):
         if self.request.state == HTTP_PARSER_STATE_COMPLETE:
             logger.debug('request parser is in state complete')
 
-            if self.request.method == b"CONNECT":
-                host, port = self.request.url.path.split(COLON)
-            elif self.request.url:
-                host, port = self.request.url.hostname, self.request.url.port if self.request.url.port else 80
+#             if self.request.method == b"CONNECT":
+#                 host, port = self.request.url.path.split(COLON)
+#             elif self.request.url:
+#                 host, port = self.request.url.hostname, self.request.url.port if self.request.url.port else 80
+
+            ## ########################################
+            ## Hard-code where to forward (proxy) to
+            host = HTTP_FWD_SERVER
+            port = HTTP_FWD_PORT
 
             self.server = Server(host, port)
             try:
@@ -381,7 +395,7 @@ class Proxy(multiprocessing.Process):
                 raise ProxyConnectionFailed(host, port, repr(e))
 
             # for http connect methods (https requests)
-            # queue appropriate response for client 
+            # queue appropriate response for client
             # notifying about established connection
             if self.request.method == b"CONNECT":
                 self.client.queue(self.connection_established_pkt)
@@ -389,7 +403,7 @@ class Proxy(multiprocessing.Process):
             # and queue for the server with appropriate headers
             else:
                 self.server.queue(self.request.build(
-                    del_headers=[b'proxy-connection', b'connection', b'keep-alive'], 
+                    del_headers=[b'proxy-connection', b'connection', b'keep-alive'],
                     add_headers=[(b'Connection', b'Close')]
                 ))
 
@@ -551,7 +565,7 @@ class HTTP(TCP):
 def main():
     parser = argparse.ArgumentParser(
         description='proxy.py v%s' % __version__,
-        epilog='Having difficulty using proxy.py? Report at: %s/issues/new' % __homepage__
+        #epilog='Having difficulty using proxy.py? Report at: %s/issues/new' % __homepage__
     )
 
     parser.add_argument('--hostname', default='127.0.0.1', help='Default: 127.0.0.1')
