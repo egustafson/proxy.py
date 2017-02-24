@@ -22,34 +22,6 @@ import sys
 
 logger = logging.getLogger(__name__)
 
-# True if we're running Python 3.
-PY3 = sys.version_info[0] == 3
-
-if PY3:
-    text_type = str
-    binary_type = bytes
-    from urllib import parse as urlparse
-else:
-    text_type = unicode
-    binary_type = str
-    import urlparse
-
-
-def text_(s, encoding='utf-8', errors='strict'):
-    """ If ``s`` is an instance of ``binary_type``, return
-    ``s.decode(encoding, errors)``, otherwise return ``s``"""
-    if isinstance(s, binary_type):
-        return s.decode(encoding, errors)
-    return s  # pragma: no cover
-
-
-def bytes_(s, encoding='utf-8', errors='strict'):
-    """ If ``s`` is an instance of ``text_type``, return
-    ``s.encode(encoding, errors)``, otherwise return ``s``"""
-    if isinstance(s, text_type):  # pragma: no cover
-        return s.encode(encoding, errors)
-    return s
-
 ## ############################################################
 
 class ZmqConnection(object):
@@ -81,6 +53,7 @@ class ZmqServer(ZmqConnection):
         self.recvsock.bind(self.pulladdr)
         self.sendsock = self.zcontext.socket(zmq.PUSH)
         self.sendsock.bind(self.pushaddr)
+        logger.debug("zmq listening on {{{}, {}}}".format(self.pushaddr, self.pulladdr))
 
 
 class ZmqClient(ZmqConnection):
@@ -91,4 +64,10 @@ class ZmqClient(ZmqConnection):
         self.recvsock.connect(self.pulladdr)
         self.sendsock = self.zcontext.socket(zmq.PUSH)
         self.sendsock.connect(self.pushaddr)
+        logger.debug("zmq connecting to {{{}, {}}}".format(self.pushaddr, self.pulladdr))
 
+
+if __name__=='__main__':
+    logging.basicConfig(level='DEBUG', format='%(asctime)s - %(levelname)s - pid:%(process)d - %(message)s')
+    logger.info("Using  pyzmq v{}".format(zmq.__version__))
+    logger.info("Using libzmq v{}".format(zmq.zmq_version()))
