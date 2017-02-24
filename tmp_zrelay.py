@@ -16,15 +16,15 @@ zclient = ZmqClient(LOCALHOST, 19778)
 logger.info("Client and Server initialized")
 
 while True:
-    rlist = [zclient.recvsock, zserver.recvsock]
+    rlist = [zclient.sock, zserver.sock]
     (r, w, x) = zmq.select(rlist, [], [], 5)
 
-    if zclient.recvsock in r:
+    if zclient.sock in r:
         msg = zclient.recv()
         zserver.send(msg)
         logger.debug("c->s: '{}'".format(msg))
 
-    if zserver.recvsock in r:
+    if zserver.sock in r:
         msg = zserver.recv()
         zclient.send(msg)
         logger.debug("s->c: '{}'".format(msg))

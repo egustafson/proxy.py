@@ -10,16 +10,18 @@ logger = logging.getLogger(__name__)
 
 ## ############################################################
 
-def main(host, port):
+def main(host, port, count=1):
 
     zclient = ZmqClient(host, port)
     logger.info("zclient created - {}:{}".format(host, port))
 
-    msg = b'ping'
-    zclient.send(msg)
-    logger.debug("message sent: '{}'".format(msg))
-    msg = zclient.recv()
-    logger.debug("received: {}".format(msg))
+    while count > 0:
+        count -= 1
+        msg = b'ping'
+        zclient.send(msg)
+        logger.debug("message sent: '{}'".format(msg))
+        msg = zclient.recv()
+        logger.debug("received: {}".format(msg))
 
 
 if __name__ == '__main__':
@@ -36,8 +38,6 @@ if __name__ == '__main__':
     port = int(args.port)
     count = int(args.count)
 
-    while count > 0:
-        main(host, port)
-        count -= 1
-        
+    main(host, port, count)
+
     logger.info('done.')
